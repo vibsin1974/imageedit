@@ -14,6 +14,7 @@ const BatchResize = () => {
     });
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
@@ -26,6 +27,37 @@ const BatchResize = () => {
         }));
 
         setImages(prev => [...prev, ...newImages]);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+
+        const files = Array.from(e.dataTransfer.files).filter(file =>
+            file.type.startsWith('image/')
+        );
+
+        if (files.length > 0) {
+            const newImages = files.map(file => ({
+                file,
+                preview: URL.createObjectURL(file),
+                name: file.name,
+                originalSize: file.size,
+                dimensions: null
+            }));
+
+            setImages(prev => [...prev, ...newImages]);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
     };
 
     const removeImage = (index) => {
@@ -246,91 +278,124 @@ const BatchResize = () => {
                 flexDirection: 'column',
                 gap: '1rem'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <ImageIcon size={20} /> Images ({images.length})
-                    </h2>
-                    <label className="btn btn-primary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Upload size={18} /> Add Images
-                        <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            style={{ display: 'none' }}
-                        />
-                    </label>
+                <h2 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <ImageIcon size={20} /> Images ({images.length})
+                </h2>
+
+                {/* Drag & Drop Zone */}
+                <div
+                    onClick={() => document.getElementById('batchResizeInput')?.click()}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragLeave={handleDragLeave}
+                    style={{
+                        border: isDragging ? '3px dashed rgba(99, 102, 241, 0.8)' : '2px dashed var(--border-color)',
+                        borderRadius: 'var(--radius-lg)',
+                        padding: '2rem',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        backgroundColor: isDragging ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-primary)',
+                        transition: 'all 0.2s ease'
+                    }}
+                >
+                    <input
+                        type="file"
+                        id="batchResizeInput"
+                        multiple
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                    />
+                    <Upload size={40} color="var(--accent-primary)" style={{ marginBottom: '0.5rem' }} />
+                    <p style={{ color: 'var(--text-primary)', fontWeight: '500', margin: '0.5rem 0' }}>
+                        클릭하거나 이미지를 드래그하여 추가
+                    </p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+                        JPG, PNG 지원
+                    </p>
                 </div>
 
-                <div className="image-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                    gap: '1rem',
-                    overflowY: 'auto',
-                    flex: 1,
-                    padding: '0.5rem'
-                }}>
-                    {images.map((img, index) => (
-                        <div key={index} style={{
-                            position: 'relative',
-                            backgroundColor: 'var(--bg-primary)',
-                            borderRadius: '8px',
-                            padding: '0.5rem',
-                            border: '1px solid var(--border-color)'
-                        }}>
-                            <button
-                                onClick={() => removeImage(index)}
-                                style={{
-                                    position: 'absolute',
-                                    top: '-8px',
-                                    right: '-8px',
-                                    background: 'red',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: '24px',
-                                    height: '24px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    zIndex: 10
-                                }}
-                            >
-                                <X size={14} />
-                            </button>
-                            <div style={{ aspectRatio: '1', overflow: 'hidden', borderRadius: '4px', marginBottom: '0.5rem' }}>
-                                <img
-                                    src={img.preview}
-                                    alt={img.name}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    onLoad={(e) => updateImageDimensions(index, e.target.naturalWidth, e.target.naturalHeight)}
-                                />
-                            </div>
-                            <div style={{ fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {img.name}
-                            </div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                                {img.dimensions ? `${img.dimensions.width}x${img.dimensions.height}` : 'Loading...'}
-                            </div>
-                        </div>
-                    ))}
-                    {images.length === 0 && (
+                {/* Image Grid with Fixed Height */}
+                {images.length > 0 && (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.5rem',
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                        padding: '0.5rem',
+                        backgroundColor: 'var(--bg-primary)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-color)'
+                    }}>
                         <div style={{
-                            gridColumn: '1 / -1',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            color: 'var(--text-secondary)',
-                            opacity: 0.5
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                            gap: '0.75rem'
                         }}>
-                            <Upload size={48} style={{ marginBottom: '1rem' }} />
-                            <p>No images added yet</p>
+                            {images.map((img, index) => (
+                                <div key={index} style={{
+                                    position: 'relative',
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    borderRadius: '6px',
+                                    padding: '0.5rem',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <button
+                                        onClick={() => removeImage(index)}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '-6px',
+                                            right: '-6px',
+                                            background: '#ef4444',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '50%',
+                                            width: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            zIndex: 10,
+                                            fontSize: '12px',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                    <div style={{
+                                        aspectRatio: '1',
+                                        overflow: 'hidden',
+                                        borderRadius: '4px',
+                                        marginBottom: '0.5rem',
+                                        backgroundColor: '#fff'
+                                    }}>
+                                        <img
+                                            src={img.preview}
+                                            alt={img.name}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onLoad={(e) => updateImageDimensions(index, e.target.naturalWidth, e.target.naturalHeight)}
+                                        />
+                                    </div>
+                                    <div style={{
+                                        fontSize: '0.7rem',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        color: 'var(--text-primary)',
+                                        marginBottom: '0.25rem'
+                                    }}>
+                                        {img.name}
+                                    </div>
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                                        {img.dimensions ? `${img.dimensions.width}×${img.dimensions.height}` : 'Loading...'}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );

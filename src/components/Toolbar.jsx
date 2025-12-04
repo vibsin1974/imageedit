@@ -12,7 +12,9 @@ import {
     Image as ImageIcon,
     FlipHorizontal,
     FlipVertical,
-    FileText
+    FileText,
+    Paintbrush,
+    Square
 } from 'lucide-react';
 
 const Toolbar = ({
@@ -25,9 +27,18 @@ const Toolbar = ({
     onDownloadPdf,
     onClear,
     onFlip,
-    selectionColor,
-    onSelectionColorChange,
-    onCrop
+    selectionMode,
+    onSelectionModeToggle,
+    onUnselect,
+    onCrop,
+    fillColor,
+    onFillColorChange,
+    onFill,
+    borderColor,
+    onBorderColorChange,
+    borderWidth,
+    onBorderWidthChange,
+    onBorder
 }) => {
 
     const filterControls = [
@@ -44,60 +55,129 @@ const Toolbar = ({
             width: '300px',
             backgroundColor: 'var(--bg-secondary)',
             borderLeft: '1px solid var(--border-color)',
-            padding: '1.5rem',
+            padding: '1rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.5rem',
+            gap: '1rem',
             overflowY: 'auto'
         }}>
-            <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button className="btn btn-primary" style={{ flex: 1 }} onClick={onDownload}>
-                        <Download size={18} /> Save
+            <div className="control-group">
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Selection & Crop</h4>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <button
+                        className="btn btn-secondary"
+                        style={{
+                            flex: 1,
+                            backgroundColor: selectionMode ? 'var(--bg-tertiary)' : undefined,
+                            borderColor: selectionMode ? 'var(--border-color-hover)' : undefined
+                        }}
+                        onClick={onSelectionModeToggle}
+                    >
+                        <Square size={18} /> Select
                     </button>
-                    <button className="btn btn-secondary" onClick={onClear} title="New Image">
-                        <Trash2 size={18} />
+                    <button
+                        className="btn btn-secondary"
+                        style={{
+                            flex: 1,
+                            backgroundColor: !selectionMode ? 'var(--bg-tertiary)' : undefined,
+                            borderColor: !selectionMode ? 'var(--border-color-hover)' : undefined
+                        }}
+                        onClick={onUnselect}
+                    >
+                        <Square size={18} /> Unselect
                     </button>
                 </div>
-                <button className="btn btn-secondary" style={{ width: '100%' }} onClick={onDownloadPdf}>
-                    <FileText size={18} /> Save as PDF
+                <button className="btn btn-secondary" style={{ width: '100%' }} onClick={onCrop}>
+                    <CropIcon size={18} /> Crop
                 </button>
             </div>
 
             <div className="control-group">
-                <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Selection & Crop</h4>
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Border Color</label>
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Drawing Tools</h4>
+
+                {/* Fill Tool */}
+                <div style={{ marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Fill Color</label>
+                            <input
+                                type="color"
+                                value={fillColor}
+                                onChange={(e) => onFillColorChange(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    height: '36px',
+                                    padding: '0',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-md)',
+                                    cursor: 'pointer',
+                                    backgroundColor: 'transparent'
+                                }}
+                            />
+                        </div>
+                        <button
+                            className="btn btn-secondary"
+                            style={{ flex: 1, height: '36px', alignSelf: 'flex-end' }}
+                            onClick={onFill}
+                        >
+                            <Paintbrush size={18} /> Fill
+                        </button>
+                    </div>
+                </div>
+
+                {/* Border Tool */}
+                <div>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Border Color</label>
+                            <input
+                                type="color"
+                                value={borderColor}
+                                onChange={(e) => onBorderColorChange(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    height: '36px',
+                                    padding: '0',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-md)',
+                                    cursor: 'pointer',
+                                    backgroundColor: 'transparent'
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div style={{ marginBottom: '0.25rem' }}>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            Border Width: {borderWidth}px
+                        </label>
                         <input
-                            type="color"
-                            value={selectionColor}
-                            onChange={(e) => onSelectionColorChange(e.target.value)}
-                            style={{
-                                width: '100%',
-                                height: '36px',
-                                padding: '0',
-                                border: 'none',
-                                borderRadius: 'var(--radius-md)',
-                                cursor: 'pointer',
-                                backgroundColor: 'transparent'
-                            }}
+                            type="range"
+                            min="1"
+                            max="50"
+                            step="1"
+                            value={borderWidth}
+                            onChange={(e) => onBorderWidthChange(parseInt(e.target.value))}
+                            style={{ width: '100%', marginTop: '0.25rem' }}
                         />
                     </div>
-                    <button className="btn btn-secondary" style={{ flex: 1, height: '36px', alignSelf: 'flex-end' }} onClick={onCrop}>
-                        <CropIcon size={18} /> Crop
+                    <button
+                        className="btn btn-secondary"
+                        style={{ width: '100%' }}
+                        onClick={onBorder}
+                    >
+                        <Square size={18} /> Add Border
                     </button>
                 </div>
             </div>
 
             <div className="control-group">
-                <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Transform</h4>
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Transform</h4>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => onRotate(90)}>
                         <RotateCw size={18} /> Rotate
                     </button>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => onFlip('horizontal')} title="Flip Horizontal">
                         <FlipHorizontal size={18} />
                     </button>
@@ -116,8 +196,8 @@ const Toolbar = ({
             </div>
 
             <div className="control-group">
-                <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Filters</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Filters</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {filterControls.map((control) => (
                         <div key={control.name}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
