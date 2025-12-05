@@ -161,18 +161,21 @@ const SingleEditor = () => {
 
     ctx.drawImage(image, 0, 0);
 
-    if (completedCrop?.width && completedCrop?.height) {
+    const targetCrop = completedCrop || crop;
+
+    if (targetCrop?.width && targetCrop?.height) {
       const scaleX = image.naturalWidth / image.width;
       const scaleY = image.naturalHeight / image.height;
 
-      const fillX = completedCrop.x * scaleX;
-      const fillY = completedCrop.y * scaleY;
-      const fillWidth = completedCrop.width * scaleX;
-      const fillHeight = completedCrop.height * scaleY;
+      const fillX = targetCrop.x * scaleX;
+      const fillY = targetCrop.y * scaleY;
+      const fillWidth = targetCrop.width * scaleX;
+      const fillHeight = targetCrop.height * scaleY;
 
       ctx.fillStyle = fillColor;
       ctx.fillRect(fillX, fillY, fillWidth, fillHeight);
-    } else {
+    } else if (!selectionMode) {
+      // Only fill entire canvas if NOT in selection mode
       ctx.fillStyle = fillColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
@@ -192,19 +195,21 @@ const SingleEditor = () => {
 
     ctx.drawImage(image, 0, 0);
 
-    if (completedCrop?.width && completedCrop?.height) {
+    const targetCrop = completedCrop || crop;
+
+    if (targetCrop?.width && targetCrop?.height) {
       const scaleX = image.naturalWidth / image.width;
       const scaleY = image.naturalHeight / image.height;
 
-      const borderX = completedCrop.x * scaleX;
-      const borderY = completedCrop.y * scaleY;
-      const borderW = completedCrop.width * scaleX;
-      const borderH = completedCrop.height * scaleY;
+      const borderX = targetCrop.x * scaleX;
+      const borderY = targetCrop.y * scaleY;
+      const borderW = targetCrop.width * scaleX;
+      const borderH = targetCrop.height * scaleY;
 
       ctx.strokeStyle = borderColor;
       ctx.lineWidth = borderWidth;
       ctx.strokeRect(borderX, borderY, borderW, borderH);
-    } else {
+    } else if (!selectionMode) {
       ctx.strokeStyle = borderColor;
       ctx.lineWidth = borderWidth;
       ctx.strokeRect(0, 0, canvas.width, canvas.height);
